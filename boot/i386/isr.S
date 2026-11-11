@@ -1,5 +1,6 @@
 .section .text
 
+/* Exception macros */
 .macro ISR_NOERR num
 .global isr\num
 isr\num:
@@ -14,6 +15,16 @@ isr\num:
 isr\num:
     cli
     push $\num
+    jmp isr_common
+.endm
+
+/* IRQ macros */
+.macro IRQ num, mapped_num
+.global irq\num
+irq\num:
+    cli
+    push $0
+    push $\mapped_num
     jmp isr_common
 .endm
 
@@ -49,6 +60,23 @@ ISR_NOERR 28
 ISR_NOERR 29
 ISR_NOERR 30
 ISR_NOERR 31
+
+IRQ 0, 32
+IRQ 1, 33
+IRQ 2, 34
+IRQ 3, 35
+IRQ 4, 36
+IRQ 5, 37
+IRQ 6, 38
+IRQ 7, 39
+IRQ 8, 40
+IRQ 9, 41
+IRQ 10, 42
+IRQ 11, 43
+IRQ 12, 44
+IRQ 13, 45
+IRQ 14, 46
+IRQ 15, 47
 
 .global isr_common
 isr_common:
