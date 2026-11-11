@@ -1,6 +1,5 @@
 .section .text
 
-/* Macro for exceptions that DON'T push an error code */
 .macro ISR_NOERR num
 .global isr\num
 isr\num:
@@ -10,7 +9,6 @@ isr\num:
     jmp isr_common
 .endm
 
-/* Macro for exceptions that DO push an error code (8, 10-14, 17) */
 .macro ISR_ERR num
 .global isr\num
 isr\num:
@@ -52,30 +50,29 @@ ISR_NOERR 29
 ISR_NOERR 30
 ISR_NOERR 31
 
-/* Common handler: saves registers, calls C, restores, returns */
 .global isr_common
 isr_common:
     pusha
 
     mov %ds, %ax
-    push %eax           /* save ds */
+    push %eax
 
-    mov $0x10, %ax      /* kernel data selector */
+    mov $0x10, %ax
     mov %ax, %ds
     mov %ax, %es
     mov %ax, %fs
     mov %ax, %gs
 
-    push %esp           /* pass pointer to registers struct */
+    push %esp
     call isr_handler
-    add $4, %esp        /* clean up argument */
+    add $4, %esp
 
-    pop %eax            /* restore ds */
+    pop %eax
     mov %ax, %ds
     mov %ax, %es
     mov %ax, %fs
     mov %ax, %gs
 
     popa
-    add $8, %esp        /* remove int_no and err_code */
+    add $8, %esp
     iret
