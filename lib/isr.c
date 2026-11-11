@@ -1,24 +1,81 @@
-#include <stdint.h>
-#include "../lib/vgaprint.h"
+.section .text
 
-/* Matches the layout pushed by isr_common */
-struct regs {
-    uint32_t ds;
-    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
-    uint32_t int_no, err_code;
-    uint32_t eip, cs, eflags, useresp, ss;
-};
+/* Macro for exceptions that DON'T push an error code */
+.macro ISR_NOERR num
+.global isr\num
+isr\num:
+    cli
+    push $0
+    push $\num
+    jmp isr_common
+.endm
 
-void isr_handler(struct regs *r) {
-    put_string(5, 0, "Exception caught!", 0x0C);   /* light red */
+/* Macro for exceptions that DO push an error code (8, 10-14, 17) */
+.macro ISR_ERR num
+.global isr\num
+isr\num:
+    cli
+    push $\num
+    jmp isr_common
+.endm
 
-    /* print exception number */
-    char buf[16];
-    buf[0] = '0' + (r->int_no / 10);
-    buf[1] = '0' + (r->int_no % 10);
-    buf[2] = '\0';
-    put_string(6, 0, "Int no: ", 0x0F);
-    put_string(6, 8, buf, 0x0F);
+ISR_NOERR 0
+ISR_NOERR 1
+ISR_NOERR 2
+ISR_NOERR 3
+ISR_NOERR 4
+ISR_NOERR 5
+ISR_NOERR 6
+ISR_NOERR 7
+ISR_ERR   8
+ISR_NOERR 9
+ISR_ERR   10
+ISR_ERR   11
+ISR_ERR   12
+ISR_ERR   13
+ISR_ERR   14
+ISR_NOERR 15
+ISR_NOERR 16
+ISR_ERR   17
+ISR_NOERR 18
+ISR_NOERR 19
+ISR_NOERR 20
+ISR_NOERR 21
+ISR_NOERR 22
+ISR_NOERR 23
+ISR_NOERR 24
+ISR_NOERR 25
+ISR_NOERR 26
+ISR_NOERR 27
+ISR_NOERR 28
+ISR_NOERR 29
+ISR_NOERR 30
+ISR_NOERR 31
 
-    for (;;) __asm__ volatile ("hlt");
-}
+/* Common handler: saves registers, calls C, restores, returns */
+.global isr_common
+isr_common:
+    pusha
+
+    mov %ds, %ax
+    push %eax           /* save ds */
+
+    mov $0x10, %ax      /* kernel data selector */
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+
+    push %esp           /* pass pointer to registers struct */
+    call isr_handler
+    add $4, %esp        /* clean up argument */
+
+    pop %eax            /* restore ds */
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+
+    popa
+    add $8, %esp        /* remove int_no and err_code */
+    iret
