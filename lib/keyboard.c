@@ -30,12 +30,34 @@ void keyboard_handler(void) {
     }
     
     char c = kbd_us[scancode];
-    if (c != 0) {
+    
+    /* Ignore Escape for now */
+    if (c == 27) {
+        return;
+    }
+    
+    /* Handle Enter */
+    if (c == '\n') {
+        cursor_col = 0;
+        cursor_row++;
+    } 
+    /* Handle Backspace */
+    else if (c == '\b') {
+        if (cursor_col > 0) {
+            cursor_col--;
+            /* Erase the character by printing a space */
+            put_char(cursor_row, cursor_col, ' ', 0x0F);
+        }
+    }
+    /* Handle normal characters */
+    else if (c != 0) {
         put_char(cursor_row, cursor_col, c, 0x0F);
         cursor_col++;
-        if (cursor_col >= 80) {
-            cursor_col = 0;
-            cursor_row++;
-        }
+    }
+
+    /* If we hit the right edge of the screen, wrap to the next line */
+    if (cursor_col >= 80) {
+        cursor_col = 0;
+        cursor_row++;
     }
 }
