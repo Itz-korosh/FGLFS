@@ -1,0 +1,6 @@
+# Binary Folder
+bin/
+# Binaries / Output
+*.o
+*.img
+*.iso
