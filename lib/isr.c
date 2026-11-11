@@ -11,17 +11,19 @@ struct regs {
 };
 
 void isr_handler(struct regs *r) {
-    /* Hardware Interrupts (IRQs) are mapped to 32-47 */
     if (r->int_no >= 32 && r->int_no <= 47) {
+        
+        /* Let's prove we made it here! */
+        put_string(14, 0, "IRQ!", 0x0E);
+
         if (r->int_no == 33) {
-            keyboard_handler(); /* Handle the keyboard */
+            keyboard_handler(); 
         }
         
-        pic_acknowledge(r->int_no); /* Tell the PIC we are done */
-        return; /* MUST RETURN HERE! Otherwise it falls through to the crash screen */
+        pic_acknowledge(r->int_no); 
+        return; 
     }
 
-    /* CPU Exceptions (0-31) */
     put_string(12, 0, "Exception caught!", 0x0C);
 
     char buf[16];

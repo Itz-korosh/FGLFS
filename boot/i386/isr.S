@@ -1,12 +1,12 @@
 .section .text
 
-/* Exception macros */
+/* Exceptions */
 .macro ISR_NOERR num
 .global isr\num
 isr\num:
     cli
-    push $0
-    push $\num
+    pushl $0
+    pushl $\num
     jmp isr_common
 .endm
 
@@ -14,17 +14,17 @@ isr\num:
 .global isr\num
 isr\num:
     cli
-    push $\num
+    pushl $\num
     jmp isr_common
 .endm
 
-/* IRQ macros */
+/* IRQs */
 .macro IRQ num, mapped_num
 .global irq\num
 irq\num:
     cli
-    push $0
-    push $\mapped_num
+    pushl $0
+    pushl $\mapped_num
     jmp isr_common
 .endm
 
@@ -83,7 +83,7 @@ isr_common:
     pusha
 
     mov %ds, %ax
-    push %eax
+    pushl %eax
 
     mov $0x10, %ax
     mov %ax, %ds
@@ -91,16 +91,16 @@ isr_common:
     mov %ax, %fs
     mov %ax, %gs
 
-    push %esp
+    pushl %esp
     call isr_handler
-    add $4, %esp
+    addl $4, %esp
 
-    pop %eax
+    popl %eax
     mov %ax, %ds
     mov %ax, %es
     mov %ax, %fs
     mov %ax, %gs
 
     popa
-    add $8, %esp
+    addl $8, %esp
     iret
