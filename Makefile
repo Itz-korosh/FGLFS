@@ -5,7 +5,8 @@ CFLAGS  = -ffreestanding -nostdlib -O2 -Wall -Wextra
 LDFLAGS = -T linker.ld
 
 OBJS = bin/boot.o bin/kernel.o bin/VGAPrint.o bin/gdt.o \
-       bin/idt.o bin/idt_load.o bin/isr.o bin/isr_stubs.o
+       bin/idt.o bin/idt_load.o bin/isr.o bin/isr_stubs.o \
+       bin/pic.o bin/keyboard.o
 
 all: bin/fglfs.bin
 
@@ -15,7 +16,7 @@ bin:
 bin/boot.o: boot/i386/boot.S | bin
 	$(AS) $< -o $@
 
-bin/kernel.o: src/kernel.c lib/vgaprint.h lib/gdt.h lib/idt.h | bin
+bin/kernel.o: src/kernel.c lib/vgaprint.h lib/gdt.h lib/idt.h lib/pic.h lib/keyboard.h | bin
 	$(CC) $(CFLAGS) -c $< -o $@
 
 bin/VGAPrint.o: lib/VGAPrint.c lib/vgaprint.h | bin
@@ -30,11 +31,17 @@ bin/idt.o: lib/idt.c lib/idt.h lib/vgaprint.h | bin
 bin/idt_load.o: boot/i386/idt_load.S | bin
 	$(AS) $< -o $@
 
-bin/isr.o: lib/isr.c lib/vgaprint.h | bin
+bin/isr.o: lib/isr.c lib/vgaprint.h lib/pic.h lib/keyboard.h | bin
 	$(CC) $(CFLAGS) -c $< -o $@
 
 bin/isr_stubs.o: boot/i386/isr.S | bin
 	$(AS) $< -o $@
+
+bin/pic.o: lib/pic.c lib/pic.h lib/io.h | bin
+	$(CC) $(CFLAGS) -c $< -o $@
+
+bin/keyboard.o: lib/keyboard.c lib/keyboard.h lib/io.h lib/vgaprint.h | bin
+	$(CC) $(CFLAGS) -c $< -o $@
 
 bin/fglfs.bin: $(OBJS) linker.ld
 	$(LD) $(LDFLAGS) -o $@ $(OBJS)

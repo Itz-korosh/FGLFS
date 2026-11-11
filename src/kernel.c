@@ -2,23 +2,32 @@
 #include "../lib/vgaprint.h"
 #include "../lib/gdt.h"
 #include "../lib/idt.h"
+#include "../lib/pic.h"
+#include "../lib/keyboard.h"
 
 void kernel_main(void) {
     clear_screen();
     put_string(0, 0, "Fire Glass Linux From Scratch", 0x0F);
 
-    put_string(2, 0, "Initializing GDT...", 0x0E);
+    /* 1. Load GDT */
     gdt_init();
-    put_string(3, 0, "GDT loaded.", 0x0A);
 
-    put_string(4, 0, "Initializing IDT...", 0x0E);
+    /* 2. Load IDT */
     idt_init();
-    put_string(5, 0, "IDT loaded.", 0x0A);
 
-    /* trigger a divide-by-zero to test the IDT */
-    put_string(6, 0, "Triggering int 0 (divide by zero)...", 0x0E);
-    __asm__ volatile ("int $0");
+    /* 3. Remap the PIC so hardware interrupts don't collide with exceptions */
+    pic_remap();
 
-    put_string(7, 0, "Should not reach here!", 0x0C);
-    for (;;) __asm__ volatile ("hlt");
+    /* 4. Initialize Keyboard */
+    keyboard_init();
+
+    put_string(2, 0, "System ready. Type something!", 0x0A);
+
+    /* 5. Enable hardware interrupts! */
+    __asm__ volatile ("sti");
+
+    /* 6. Halt loop: wait for the next interrupt */
+    for (;;) {
+        __asm__ volatile ("hlt");
+    }
 }
